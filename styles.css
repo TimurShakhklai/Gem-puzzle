@@ -2,9 +2,11 @@
   margin: 0;
   padding: 0;
 }
+
 .body{
     background: rgb(32, 113, 116);
 }
+
 .wrapper {
   position: absolute;
   left: 0;
@@ -22,7 +24,6 @@ nav {
   width: 300px;
   justify-content: space-evenly;
 }
-
 
 button {
   font-size: 1.2rem;
@@ -91,15 +92,6 @@ button:active{
   cursor: pointer;
 }
 
-.empty {
-  background: rgba(100, 250, 250, 0);
-  z-index: 1;
-}
-
-.empty:hover {
-  cursor: default;
-}
-
 .hidden {
   display: hidden;
   position: absolute;
@@ -135,9 +127,18 @@ button:active{
   transition: all 1s;
 }
 
-.ok {
+.win {
   width: 80px;
   height: 30px;
   font-weight: bold;
   color: rgb(0, 0, 0);
+}
+
+.empty {
+  background: rgba(100, 250, 250, 0);
+  z-index: 1;
+}
+
+.empty:hover {
+  cursor: default;
 }
