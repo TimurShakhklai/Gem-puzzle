@@ -1,5 +1,4 @@
-// our gamefield
-const gameKeys = []; //array with objects
+const gameKeys = []; 
 let counter = 0;
 const keySize = 75;
 const keysLayout = [
@@ -9,8 +8,10 @@ const keysLayout = [
   '13', '14', '15', ''
 ];
 let random = [];
+let timerOn = false; 
+let seconds = 0; 
+let timeout;
 
-//to create and initialize page
 function init () {
   const wrapper = document.createElement("div");
   const nav = document.createElement("nav");
@@ -19,21 +20,18 @@ function init () {
   const changable = document.createElement("div");
   const gameboard = document.createElement("section");
 
-  //add classes
   wrapper.classList.add("wrapper");
   button.classList.add("menu");
   container.classList.add("container");
   changable.classList.add("changable");
   gameboard.classList.add("gameboard");
 
-  //add text
   button.innerText = "Start Game";
   changable.innerHTML = `
     <span class="time">Time: 00:00:00</span>
     <span class="moves">Moves: <span id='move'>${counter}</span></span>
     `;
 
-  //add popup on win
   const win = document.createElement('div');
   win.classList.add('popup');
   win.classList.add('up-up');
@@ -41,12 +39,11 @@ function init () {
   winText.classList.add('win-text');
   winText.innerText = '';
   const btnOk = document.createElement('button');
-  btnOk.classList.add('ok');
+  btnOk.classList.add('win');
   btnOk.innerText = 'Ok';
   win.appendChild(winText);
   win.appendChild(btnOk);
 
-  //add children
   container.appendChild(changable);
   container.appendChild(gameboard);
   nav.appendChild(button);
@@ -55,15 +52,12 @@ function init () {
   wrapper.appendChild(container);
 
 
-  //adding to DOM
   document.body.appendChild(wrapper);
   createGameField();
 };
 
-//create game field
 function createGameField () {
 const gameboard = document.querySelector('.gameboard');
-
 for (let i = 0; i < 16; i++) {
   let key = document.createElement("div");
   key.className = 'key';
@@ -98,15 +92,11 @@ for (let i = 0; i < 16; i++) {
     left: left,
     key: key,
   });
-};
- 
+ };
 };
 
-
-//to start game
 function startNewGame () {
   menu.innerHTML = 'New Game';
-  //shuffle and check if it's solvable
   random = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].sort(() => Math.random() - 0.5);
   console.log('random array: ', random);
   let sum = 0;
@@ -127,20 +117,23 @@ function startNewGame () {
   console.log(`row is: ${row}`);
   console.log('sum is: ', sum);
   if (sum % 2 !== 0) {
-    //if not solvable, randomize again
     startNewGame();
   };
 
-  //change html with our random numbers 
   newGameLayout();
-   // put down counter
- //countDown();
+ if (timerOn) {
+  clearTimeout(timeout);
+  timerOn = false;
+  timerZeroed();
+  } else {
+    if (pause.innerText === "Resume") {
+      pause.innerText = "Pause";
+      timerZeroed();
+    }
+}
 };
 
-//to change html layout
 function newGameLayout () {
-  //как-то очень громоздко и коряво. oh well.
-
 for (let i = 0; i < 15; i++) {
   let cell = gameKeys[i];  
   cell.key.innerHTML = `${random[i]}`;
@@ -171,36 +164,43 @@ for (let i = 0; i < 15; i++) {
   empty.key.style.top = `${empty.top}px`;
 };
 
-//to start timer and counter
-
-function count () {
+function count() {
   counter++;
   moves.innerHTML = `Moves: ${counter}`;
-};
-
-//to stop counter
-function countDown () {
+}
+function countDown() {
   counter = 0;
   moves.innerHTML = `Moves: ${counter}`;
-};
+}
 
+function addZero(n) {
+  return (parseInt(n, 10) < 10 ? "0" : "") + n;
+}
+function setTimer() {
+  let h = parseInt(seconds / 3600 % 24);
+  let m = parseInt(seconds / 60 % 60);
+  let s = parseInt(seconds % 60);
+  time.innerHTML = `Time: ${addZero(h)}:${addZero(m)}:${addZero(s)}`;
 
+  seconds++;
+  timeout = setTimeout(setTimer, 1000);
+}
+function timerZeroed() {
+  seconds = 0;
+  time.innerHTML = "Time: 00:00:00";
+}
 
-//run
 window.addEventListener("DOMContentLoaded", init());
-
+const time = document.querySelector(".time");
 const menu = document.querySelector(".menu");
 menu.addEventListener("click", startNewGame);
 const moves = document.querySelector(".moves");
 const popup = document.querySelector('.popup');
 const win = document.querySelector('.win-text');
 
-// to move cells onclick
 let empty = gameKeys[15];
 gameKeys.forEach(cell => {
   cell.key.addEventListener('click', () => {
-    
-    //to check whether we can move this cell
     if ((((cell.left + keySize === empty.left) || (cell.left - keySize === empty.left)) && (cell.top === empty.top)) || (((cell.top + keySize === empty.top) || (cell.top - keySize === empty.top)) && (cell.left === empty.left))) {
 
       let leftTemp = empty.left;
@@ -210,41 +210,45 @@ gameKeys.forEach(cell => {
       cell.left = leftTemp;
       cell.top = topTemp;
 
-      //now changing styles to move divs
       empty.key.style.left = `${empty.left}px`;
       empty.key.style.top = `${empty.top}px`;
       cell.key.style.left = `${cell.left}px`;
       cell.key.style.top = `${cell.top}px`;
 
-      //moves counter
       count();
-        
-    };
-
-
-    
-    
-    //is game finished? 
+     if (!timerOn) {
+      setTimer();
+      timerOn = !timerOn;
+      if (pause.innerText === "Resume") {
+        pause.innerText = "Pause";
+      }
+    }
+  }    
     if (counter > 1) {
       const isFinished = gameKeys.every(picked => {
         let place = picked.top / keySize * 4 + picked.left / keySize;
         console.log(`cell.id = ${picked.id}, cell place = ${place}`);
         return picked.id === place;
-        
       });
       if (isFinished) {
-        win.innerHTML = `<p>Congratulations!</p><p>You won<br>in ${counter} moves!</p>`;
+        clearTimeout(timeout);
+        timerOn = false;
+        seconds--;
+
+        let h = parseInt(seconds / 3600 % 24);
+        let m = parseInt(seconds / 60 % 60);
+        let s = parseInt(seconds % 60);
+        win.innerHTML = `<p>Congratulations!</p><p>You solved the puzzle<br>in ${addZero(h)}:${addZero(m)}:${addZero(s)}<br> and ${counter} moves!!!</p>`;
         popup.classList.remove('up-up');
       };
     };
   });
-
 });
 
-//to remove popup
-document.querySelector('.ok').addEventListener('click', () => {
+document.querySelector('.win').addEventListener('click', () => {
   popup.classList.add('up-up');
   countDown();
   menu.innerHTML = 'Start Game';
   random = [];
+  timerZeroed();
 });
